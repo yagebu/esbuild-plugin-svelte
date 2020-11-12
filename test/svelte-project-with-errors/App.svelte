@@ -1,12 +1,11 @@
 <script>
-  console.log("test");
+  $: a = b;
+  $: b = a;
 </script>
 
 <style>
   h1 {
     color: red;
-  }
-  .unused-class {
   }
 </style>
 

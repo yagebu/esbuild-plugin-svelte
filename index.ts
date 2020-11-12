@@ -3,26 +3,30 @@ import { readFile } from "fs/promises";
 import { compile, preprocess } from "svelte/compiler";
 import { CompileOptions, Warning } from "svelte/types/compiler/interfaces";
 import { PreprocessorGroup } from "svelte/types/compiler/preprocess";
-import { PartialMessage, Plugin } from "esbuild";
+import { PartialMessage, Location, Plugin } from "esbuild";
 import { relative } from "path";
 
 /**
- * Convert a warning emitted from the svelte compiler for esbuild.
+ * Convert a warning or error emitted from the svelte compiler for esbuild.
  */
-function convertWarning({
-  message,
-  filename,
-  start,
-  end,
-  frame,
-}: Warning): PartialMessage {
+function convertWarning(
+  source: string,
+  { message, filename, start, end, frame }: Warning
+): PartialMessage {
   if (!start || !end) {
     return { text: message };
   }
-  return {
-    text: message,
-    location: { ...start, file: filename, lineText: frame },
+  const lines = source.split(/\r\n|\r|\n/);
+  const lineText = lines[start.line - 1];
+  const location: Partial<Location> = {
+    file: filename,
+    line: start.line,
+    column: start.column,
+    length:
+      (start.line === end.line ? end.column : lineText.length) - start.column,
+    lineText,
   };
+  return { text: message, location };
 }
 
 interface PluginOptions {
@@ -61,27 +65,29 @@ function esbuildPluginSvelte(opts: PluginOptions = {}): Plugin {
           ...opts.compilerOptions,
         };
 
-        const { js, css, warnings } = compile(source, {
-          ...compilerOptions,
-          filename,
-        });
+        let res: ReturnType<typeof compile>;
+        try {
+          res = compile(source, { ...compilerOptions, filename });
+        } catch (err) {
+          return { errors: [convertWarning(source, err)] };
+        }
+        const { js, css, warnings } = res;
 
-        const code = `${js.code}\n//# sourceMappingURL=${js.map.toUrl()}`;
+        let code = `${js.code}\n//# sourceMappingURL=${js.map.toUrl()}`;
 
-        // CSS will be included in the JS and injected at runtime.
-        if (compilerOptions.css) {
-          return { contents: code, warnings: warnings.map(convertWarning) };
+        // Emit CSS, otherwise it will be included in the JS and injected at runtime.
+        if (!compilerOptions.css) {
+          const cssPath = `${path}.css`;
+          cache.set(
+            cssPath,
+            `${css.code}/*# sourceMappingURL=${css.map.toUrl()}*/`
+          );
+          code = `${code}\nimport ${JSON.stringify(cssPath)}`;
         }
 
-        const cssPath = `${path}.css`;
-        cache.set(
-          cssPath,
-          `${css.code}/*# sourceMappingURL=${css.map.toUrl()}*/`
-        );
-
         return {
-          contents: `${code}\nimport ${JSON.stringify(cssPath)}`,
-          warnings: warnings.map(convertWarning),
+          contents: code,
+          warnings: warnings.map((w) => convertWarning(source, w)),
         };
       });
     },
