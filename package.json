@@ -1,6 +1,6 @@
 {
   "name": "esbuild-plugin-svelte",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "An esbuild plugin to load svelte files.",
   "main": "index.js",
   "types": "index.d.ts",
