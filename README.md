@@ -44,8 +44,3 @@ build({
   plugins: [svelte({ compilerOptions, preprocess })],
 });
 ```
-
-## TODO
-
-- Support resolving `svelte` key in package.json
-- Support CSS sourcemaps (this seems to be not supported in esbuild)
