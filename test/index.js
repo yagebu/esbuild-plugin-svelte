@@ -20,6 +20,17 @@ test("compile a simple svelte project", async () => {
   strictEqual(res.warnings.length, 0);
 });
 
+test("compile a simple svelte project without css", async () => {
+  const dir = join(__dirname, "svelte-project-without-css");
+  const res = await build({
+    entryPoints: [join(dir, "index.js")],
+    bundle: true,
+    outfile: join(dir, "output.js"),
+    plugins: [plugin()],
+  });
+  strictEqual(res.warnings.length, 0);
+});
+
 test("compile a svelte project that has errors", async () => {
   const dir = join(__dirname, "svelte-project-with-errors");
   await rejects(() =>

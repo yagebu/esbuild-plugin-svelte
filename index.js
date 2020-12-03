@@ -58,7 +58,7 @@ function esbuildPluginSvelte(opts = {}) {
                 const { js, css, warnings } = res;
                 let code = `${js.code}\n//# sourceMappingURL=${js.map.toUrl()}`;
                 // Emit CSS, otherwise it will be included in the JS and injected at runtime.
-                if (!compilerOptions.css) {
+                if (css.code && !compilerOptions.css) {
                     const cssPath = `${path}.css`;
                     cache.set(cssPath, `${css.code}/*# sourceMappingURL=${css.map.toUrl()}*/`);
                     code = `${code}\nimport ${JSON.stringify(cssPath)}`;
