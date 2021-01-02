@@ -1,8 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const promises_1 = require("fs/promises");
+const fs_1 = require("fs");
 const compiler_1 = require("svelte/compiler");
 const path_1 = require("path");
+const { readFile } = fs_1.promises;
 /**
  * Convert a warning or error emitted from the svelte compiler for esbuild.
  */
@@ -36,7 +37,7 @@ function esbuildPluginSvelte(opts = {}) {
             // Register loader for all .svelte files.
             //
             build.onLoad({ filter: /\.svelte$/ }, async ({ path }) => {
-                let source = await promises_1.readFile(path, "utf-8");
+                let source = await readFile(path, "utf-8");
                 const filename = path_1.relative(process.cwd(), path);
                 if (opts.preprocess) {
                     const processed = await compiler_1.preprocess(source, opts.preprocess, {
