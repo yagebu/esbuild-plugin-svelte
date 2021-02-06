@@ -2,7 +2,7 @@ import { promises } from "fs";
 
 import { compile, preprocess } from "svelte/compiler";
 import { CompileOptions, Warning } from "svelte/types/compiler/interfaces";
-import { PreprocessorGroup } from "svelte/types/compiler/preprocess";
+import { PreprocessorGroup } from "svelte/types/compiler/preprocess/types";
 import { PartialMessage, Location, Plugin } from "esbuild";
 import { relative } from "path";
 
